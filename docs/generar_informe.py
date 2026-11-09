@@ -22,7 +22,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 IMG = os.path.join(HERE, "img")
 CAD = os.path.join(HERE, "..", "hardware", "cad")
 OUT = os.path.join(HERE, "Informe_Primer_Entregable.pdf")
-REPO = "https://github.com/anaescobarj/aco-swarm/tree/claude/hagamos-esto-buyx1l/robot-esp32"
+REPO = "https://github.com/anaescobarj/seguidor_de_linea"
 AUTORA = "Ana Sofía Escobar Jaramillo"
 
 # ------------------------------------------------------------------------------- fuentes y estilos
@@ -144,7 +144,7 @@ def portada():
     if os.path.exists(os.path.join(CAD, "render_iso.png")):
         out.append(Image(os.path.join(CAD, "render_iso.png"), width=11 * cm, height=8.25 * cm))
     out += [Spacer(1, 0.8 * cm), p(f"<b>{AUTORA}</b>", s), p("Noviembre de 2026", s), Spacer(1, 0.5 * cm),
-            p(f"Repositorio: <link href='{REPO}' color='blue'>github.com/anaescobarj/aco-swarm → robot-esp32/</link>",
+            p(f"Repositorio: <link href='{REPO}' color='blue'>github.com/anaescobarj/seguidor_de_linea</link>",
               ParagraphStyle("r", parent=s, fontSize=9.5)), PageBreak()]
     return out
 
