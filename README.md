@@ -7,7 +7,8 @@ Robot 4WD basado en **ESP32**, con chasis y electrónica de diseño propio. Func
 **esquiva obstáculos** con un HC-SR04 sobre servo, para luego retomar el trayecto. Un chatbot
 **J.A.R.V.I.S.** explica el proyecto y las variables en tiempo real.
 
-📄 **Informe del entregable:** [`docs/Informe_Primer_Entregable.pdf`](docs/Informe_Primer_Entregable.pdf)
+📄 **Informe del entregable:** [`docs/Informe_Primer_Entregable.pdf`](docs/Informe_Primer_Entregable.pdf)  
+🔧 **Guía de montaje paso a paso:** [`docs/MONTAJE.md`](docs/MONTAJE.md)
 
 ![Dashboard](docs/img/app_dashboard.png)
 
@@ -23,7 +24,8 @@ robot-esp32/
 │   │   ├── color_sensor.h    TCS34725, clasificación de 6 colores
 │   │   ├── sensors.h         HC-SR04 + servo, TCRT5000, batería
 │   │   └── robot_esp32.ino   lazo 20 Hz, máquina de estados, API HTTP, ESP-NOW
-│   └── control_remoto/     control propio: ESP32 + joystick (ESP-NOW)
+│   ├── control_remoto/     control propio: ESP32 + joystick (ESP-NOW)
+│   └── pruebas_modulos/    sketch de pruebas por módulo para el montaje (menú serie)
 ├── app/
 │   ├── app.py              dashboard Streamlit (control, voz, brújula polar, J.A.R.V.I.S.)
 │   ├── commands.py         intérprete de comandos de voz en español
@@ -84,10 +86,11 @@ openscad -D 'PARTE="base_2d"' -o hardware/cad/placa_base.dxf hardware/cad/chasis
 | Señal | GPIO | | Señal | GPIO |
 |---|---|---|---|---|
 | PWMA/AIN1/AIN2 | 25/26/27 | | SDA/SCL (brújula + color) | 21/22 |
-| PWMB/BIN1/BIN2 | 14/33/32 | | TRIG/ECHO (divisor 1k/2k) | 18/19 |
+| PWMB/BIN1/BIN2 | 14/16/32 | | TRIG/ECHO (divisor 1k/2k) | 18/19 |
 | STBY | 13 | | Servo | 23 |
 | IR izq/centro/der | 34/35/39 | | LED del sensor de color | 4 |
 | VBAT (100k/33k) | 36 | | LED de estado | 2 |
+| Termistor NTC (10k/10k) | 33 | | | |
 
 ## Resultados en simulación (una vuelta por nivel)
 
