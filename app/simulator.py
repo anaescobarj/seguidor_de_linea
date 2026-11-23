@@ -175,6 +175,7 @@ class SimRobot:
         self.obstacles_avoided = 0
         self.last_line_err = 0.0
         self.avoid_end = -100.0
+        self.align_armed = False
         self.collisions = 0
         self._colliding = False
         self.event, self.event_id = "Simulador iniciado", 0
@@ -316,17 +317,21 @@ class SimRobot:
             # avanza hasta dejar el centro del robot sobre la línea
             self.arcade(self.auto_speed * 0.6, 0)
             if dt > 0.3:
+                self.align_armed = False
                 self.set_state("ALINEAR")
         elif s == "ALINEAR":
-            # gira en el sitio hacia el lado de la evasión hasta quedar sobre la línea
-            # y apuntando en el sentido original de la pista (±90° de h0)
-            # pivotando sobre la línea, el primer cruce girando hacia el lado de la evasión
-            # corresponde al sentido de avance original de la pista
-            if self.line[1] and dt > 0.25:
+            # pivotando sobre la línea, el primer cruce del sensor central girando hacia el
+            # lado de la evasión corresponde al sentido de avance original de la pista.
+            # Solo se acepta después de que el sensor central haya salido de la línea.
+            # Entre los dos cruces posibles (adelante / atrás) se acepta el que apunta a
+            # menos de 100° del rumbo previo al obstáculo (h0).
+            if not self.line[1]:
+                self.align_armed = True
+            if self.line[1] and self.align_armed and abs(wrap180(self.heading - self.h0)) < 100:
                 self.heading_des = self.heading
                 self.last_line_err = 0.0
                 self.set_state("SEGUIR")
-            elif dt > 4.0:
+            elif dt > 6.0:
                 self.set_state("SEGUIR")
             else:
                 self.arcade(0, self.side * 0.38)

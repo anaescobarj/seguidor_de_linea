@@ -33,7 +33,10 @@ solo lo último que se conectó.
 | ☐ | 1 | PCB perforada ~7×5 cm, headers hembra, borneras | |
 | ☐ | 6 | Separadores M3 × 45 mm + tornillos/tuercas M3 | |
 | ☐ | — | Cable 22 AWG (potencia) y 26 AWG / dupont (señales), termoencogible | |
-| ☐ | — | Cinta aislante negra de 19 mm (línea guía de la pista) | |
+| ☐ | — | Cinta aislante negra de 19 mm (línea guía de la pista) | y un rollo blanco para la sección negra |
+
+Las **pistas** (planos a escala, tablas de trazado y cantidades de cartulina) están en
+[`docs/pistas/Plantillas_Pistas.pdf`](pistas/Plantillas_Pistas.pdf).
 
 ### Piezas a fabricar
 

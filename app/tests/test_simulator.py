@@ -89,3 +89,16 @@ def test_temperature_rises_with_motor_load():
     for _ in range(int(120 / 0.05)):
         r.step()
     assert 25.5 < r.temp < 45                                            # se calienta sin alarmar
+
+
+@pytest.mark.parametrize("level", [1, 2, 3])
+def test_track_templates_lap(level):
+    """Las pistas de docs/pistas se completan sin chocar ni quedar en sentido contrario."""
+    import os
+    import sys
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "docs"))
+    import generar_pistas as gp
+    d = gp.design(level)
+    s = gp.simulate(d)
+    assert s["vuelta"] and s["colisiones"] == 0
+    assert s["esquivados"] == gp.LEVELS[level]["obstaculos"]

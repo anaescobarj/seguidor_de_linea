@@ -8,7 +8,8 @@ Robot 4WD basado en **ESP32**, con chasis y electrónica de diseño propio. Func
 **J.A.R.V.I.S.** explica el proyecto y las variables en tiempo real.
 
 📄 **Informe del entregable:** [`docs/Informe_Primer_Entregable.pdf`](docs/Informe_Primer_Entregable.pdf)  
-🔧 **Guía de montaje paso a paso:** [`docs/MONTAJE.md`](docs/MONTAJE.md)
+🔧 **Guía de montaje paso a paso:** [`docs/MONTAJE.md`](docs/MONTAJE.md)  
+🏁 **Plantillas de las 3 pistas:** [`docs/pistas/Plantillas_Pistas.pdf`](docs/pistas/Plantillas_Pistas.pdf)
 
 ![Dashboard](docs/img/app_dashboard.png)
 

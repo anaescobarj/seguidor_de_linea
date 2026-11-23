@@ -67,6 +67,7 @@ static uint32_t obstaclesAvoided = 0;
 static float lastLineErr = 0;
 static uint32_t prevLineSeen = 0;
 static uint32_t avoidEnd = 0;
+static bool alignArmed = false;       // ALINEAR: el sensor central ya salió de la línea
 static uint8_t tempLevel = 0;         // 0 normal, 1 aviso, 2 sobretemperatura         // instante en que terminó la última evasión    // última vez que se vio la línea (ciclo anterior)        // memoria del lado donde se vio la línea
 
 // Eventos para la app / chatbot
@@ -207,16 +208,20 @@ static void autoControl(uint32_t now) {
     case ST_CRUZAR:
       // avanza hasta dejar el centro del robot sobre la línea
       Motors::arcade(autoSpeed * 0.6f, 0);
-      if (dt > 300) setAutoState(ST_ALINEAR);
+      if (dt > 300) { alignArmed = false; setAutoState(ST_ALINEAR); }
       break;
     case ST_ALINEAR:
-      // pivotando sobre la línea, el primer cruce girando hacia el lado de la
-      // evasión corresponde al sentido de avance original de la pista
-      if (LineSensors::c && dt > 250) {
+      // pivotando sobre la línea, el primer cruce del sensor central girando hacia
+      // el lado de la evasión corresponde al sentido de avance original de la pista.
+      // Solo se acepta después de que el sensor central haya salido de la línea.
+      // Entre los dos cruces posibles (adelante / atrás) se acepta el que apunta a
+      // menos de 100° del rumbo previo al obstáculo (h0).
+      if (!LineSensors::c) alignArmed = true;
+      if (LineSensors::c && alignArmed && fabsf(Compass::wrap180(Compass::heading - h0)) < 100) {
         headingDes = Compass::heading;
         lastLineErr = 0;
         setAutoState(ST_SEGUIR);
-      } else if (dt > 4000) {
+      } else if (dt > 6000) {
         setAutoState(ST_SEGUIR);
       } else {
         Motors::arcade(0, side * 0.38f);
