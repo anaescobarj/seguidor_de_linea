@@ -102,3 +102,18 @@ def test_track_templates_lap(level):
     s = gp.simulate(d)
     assert s["vuelta"] and s["colisiones"] == 0
     assert s["esquivados"] == gp.LEVELS[level]["obstaculos"]
+
+
+@pytest.mark.parametrize("idx", [0, 1, 2, 3])
+def test_pliego_tracks_lap(idx):
+    """Las pistas para pliegos caben en el papel y se completan sin colisiones."""
+    import os
+    import sys
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "docs"))
+    import generar_pistas as gp
+    import generar_pistas_pliegos as gpp
+    p = gpp.PISTAS[idx]
+    d = gpp.build(p, idx)                    # build() verifica que la línea quepa en el papel
+    assert d["rmin"] >= 0.195
+    s = gp.simulate(d, seconds=120)
+    assert s["vuelta"] and s["colisiones"] == 0

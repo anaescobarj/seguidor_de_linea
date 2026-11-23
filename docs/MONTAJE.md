@@ -35,8 +35,10 @@ solo lo último que se conectó.
 | ☐ | — | Cable 22 AWG (potencia) y 26 AWG / dupont (señales), termoencogible | |
 | ☐ | — | Cinta aislante negra de 19 mm (línea guía de la pista) | y un rollo blanco para la sección negra |
 
-Las **pistas** (planos a escala, tablas de trazado y cantidades de cartulina) están en
-[`docs/pistas/Plantillas_Pistas.pdf`](pistas/Plantillas_Pistas.pdf).
+Las **pistas** están en `docs/pistas/`:
+- [`Pistas_en_Pliegos.pdf`](pistas/Pistas_en_Pliegos.pdf): para dibujarlas sobre pliegos de 70 × 100 cm
+  (práctica 1 pliego, nivel 1: 2, nivel 2: 4, nivel 3: 6).
+- [`Plantillas_Pistas.pdf`](pistas/Plantillas_Pistas.pdf): versión grande con carretera de 32 cm.
 
 ### Piezas a fabricar
 

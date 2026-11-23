@@ -35,7 +35,9 @@ MARGIN = 0.10          # m, borde libre alrededor de la carretera en el área to
 OBST_R = 0.05          # m, radio del cono en la base (cono de entrenamiento ~10 cm)
 MIN_OBST_GAP = 0.80    # m, separación mínima entre obstáculos
 MIN_BOUNDARY = 0.20    # m, distancia mínima de un obstáculo a un cambio de color
+START_FREE = 0.50      # m, tramo libre de conos después de la salida
 SCALE = 15             # plano 1:15
+ROAD_LABEL = "Carretera"  # cómo se llama la franja de color en los textos
 PLIEGO = (0.70, 1.00)  # m, pliego de cartulina
 
 HEX = {"negro": "#111111", "blanco": "#f2f2f2", "rojo": "#d62828", "amarillo": "#f6c90e",
@@ -55,6 +57,8 @@ LEVELS = {
 
 # ------------------------------------------------------------------------------ geometría
 def raw_curve(kind: str, p: tuple, n: int = 4000) -> list[tuple[float, float]]:
+    if kind == "puntos":            # curva ya calculada (lista de puntos)
+        return list(p)
     pts = []
     for i in range(n):
         t = 2 * math.pi * i / n
@@ -140,9 +144,9 @@ def design(level: int) -> dict:
     rng = random.Random(level)
     k = cfg["obstaculos"]
     allowed = [i * step for i in range(n)
-               if dist_to_bound(i * step) >= MIN_BOUNDARY and 0.5 < i * step < L - 0.3]
+               if dist_to_bound(i * step) >= MIN_BOUNDARY and START_FREE < i * step < L - 0.3]
     best, best_score = None, -1e9
-    for _ in range(4000):
+    for _ in range(4000 if k > 0 else 0):
         s0 = rng.choice(allowed)
         chosen = [s0]
         for _ in range(k - 1):
@@ -152,12 +156,14 @@ def design(level: int) -> dict:
             target = chosen[-1] + max(MIN_OBST_GAP, (L - (chosen[-1] - s0)) / (k - len(chosen) + 1))
             nxt.sort(key=lambda c: abs(c - target) + rng.random() * 0.25)
             chosen.append(nxt[0])
-        if len(chosen) < k or circ(chosen[-1], chosen[0]) < MIN_OBST_GAP:
+        if len(chosen) < k or (k > 1 and circ(chosen[-1], chosen[0]) < MIN_OBST_GAP):
             continue
         gaps = [((chosen[(j + 1) % k] - chosen[j]) % L) for j in range(k)]
         score = min(evasion[int(c / step) % n] for c in chosen) - 0.5 * (max(gaps) - min(gaps))
         if score > best_score:
             best, best_score = sorted(chosen), score
+    if k == 0:
+        best = []
     if best is None:
         raise RuntimeError(f"Nivel {level}: no caben {k} obstáculos con las restricciones")
     obst = best
@@ -220,7 +226,7 @@ def simulate(d, seconds=150):
 A4L = (11.69, 8.27)
 
 
-def page_plano(pdf, d, sim):
+def page_plano(pdf, d, sim, extra=None):
     fig = plt.figure(figsize=A4L)
     W, H = d["W"], d["H"]
     # ejes con tamaño físico exacto para que la escala 1:15 sea real al imprimir al 100 %
@@ -292,7 +298,7 @@ def page_plano(pdf, d, sim):
         "Coordenadas en cm desde la esquina",
         "inferior izquierda del área.",
         "",
-        f"Carretera: {ROAD_W * 100:.0f} cm de ancho",
+        f"{ROAD_LABEL}: {ROAD_W * 100:.0f} cm de ancho",
         "Línea guía: cinta de 19 mm por el centro",
         "(blanca en la sección negra)",
         f"Radio mínimo de curva: {d['rmin'] * 100:.0f} cm",
@@ -303,6 +309,9 @@ def page_plano(pdf, d, sim):
     info += [f"  {k + 1}. {c:<9} {k * d['seg'] * 100:5.0f}–{(k + 1) * d['seg'] * 100:4.0f} cm"
              for k, c in enumerate(d["colores"])]
     info += ["", "Obstáculos (conos ≥ 18 cm de alto):"]
+    if not d["obst"]:
+        info += ["  ninguno: la evasión se prueba en", "  una recta de cinta de 1,5 m en el",
+                 "  piso con un cono a la mitad."]
     for j, s in enumerate(d["obst"]):
         x, y = point_at(d, s)
         info.append(f"  {j + 1}. a {s * 100:5.0f} cm  (x={x * 100:4.0f}, y={y * 100:4.0f})")
@@ -315,6 +324,8 @@ def page_plano(pdf, d, sim):
              "de la carretera junto a los obstáculos."]
     fig.text(x0, 0.90, "\n".join(info), va="top", ha="left", fontsize=7.2, family="DejaVu Sans Mono")
     # barra de 50 cm a escala
+    if extra:
+        extra(ax)
     bar_in = 50 / SCALE / 2.54
     bx, by = x0, 0.06
     fig.add_artist(plt.Line2D([bx, bx + bar_in / A4L[0]], [by, by], color="k", lw=3))
@@ -323,7 +334,7 @@ def page_plano(pdf, d, sim):
     plt.close(fig)
 
 
-def page_tabla(pdf, d):
+def page_tabla(pdf, d, pliego_of=None):
     # puntos cada 20 cm + filas exactas en cada cambio de color y en cada cono
     marks = [(k * d["seg"], f"▶ inicia {c}") for k, c in enumerate(d["colores"])]
     marks += [(so, f"◆ CONO {j + 1}") for j, so in enumerate(d["obst"])]
@@ -345,7 +356,10 @@ def page_tabla(pdf, d):
         for c in d["colores"]:
             if f"inicia {c}" in items[sk]:
                 col = c
-        rows.append([f"{sk * 100:.0f}", f"{x * 100:.0f}", f"{y * 100:.0f}", col, items[sk]])
+        note = items[sk]
+        if pliego_of:
+            note = (pliego_of(x, y) + "  " + note).strip()
+        rows.append([f"{sk * 100:.0f}", f"{x * 100:.0f}", f"{y * 100:.0f}", col, note])
     per_col = 46
     chunks = [rows[i:i + per_col] for i in range(0, len(rows), per_col)]
     for c0 in range(0, len(chunks), 2):

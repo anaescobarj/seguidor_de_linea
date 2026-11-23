@@ -9,7 +9,7 @@ Robot 4WD basado en **ESP32**, con chasis y electrónica de diseño propio. Func
 
 📄 **Informe del entregable:** [`docs/Informe_Primer_Entregable.pdf`](docs/Informe_Primer_Entregable.pdf)  
 🔧 **Guía de montaje paso a paso:** [`docs/MONTAJE.md`](docs/MONTAJE.md)  
-🏁 **Plantillas de las 3 pistas:** [`docs/pistas/Plantillas_Pistas.pdf`](docs/pistas/Plantillas_Pistas.pdf)
+🏁 **Pistas para dibujar en pliegos:** [`docs/pistas/Pistas_en_Pliegos.pdf`](docs/pistas/Pistas_en_Pliegos.pdf) · versión grande: [`Plantillas_Pistas.pdf`](docs/pistas/Plantillas_Pistas.pdf)
 
 ![Dashboard](docs/img/app_dashboard.png)
 
