@@ -376,7 +376,7 @@ def mecanico():
 def electronico():
     pins = [["Señal", "GPIO", "Módulo", "Nota"],
             ["PWMA / AIN1 / AIN2", "25 / 26 / 27", "TB6612 canal A (izq.)", "LEDC 20 kHz, 10 bit"],
-            ["PWMB / BIN1 / BIN2", "14 / 33 / 32", "TB6612 canal B (der.)", "GPIO12 evitado (arranque)"],
+            ["PWMB / BIN1 / BIN2", "14 / 16 / 32", "TB6612 canal B (der.)", "GPIO12 evitado (arranque)"],
             ["STBY", "13", "TB6612", "Habilita el puente"],
             ["SDA / SCL", "21 / 22", "QMC5883L + TCS34725", "I2C 400 kHz"],
             ["LED color", "4", "TCS34725", "Iluminación constante"],
@@ -384,6 +384,7 @@ def electronico():
             ["SERVO", "23", "SG90", "50 Hz, 14 bit"],
             ["IR izq. / centro / der.", "34 / 35 / 39", "TCRT5000", "Pines solo entrada"],
             ["VBAT", "36", "Divisor 100k/33k", "8.4 V → 2.08 V"],
+            ["NTC (temperatura)", "33", "Divisor 10k / NTC 10k", "ADC1 (válido con Wi-Fi)"],
             ["LED estado", "2", "LED de la placa", "Parpadea en AUTO"]]
     return [h1("6. Diseño electrónico"),
             p("El circuito se divide en la etapa de potencia (Figura siguiente) y las conexiones de señal entre el "

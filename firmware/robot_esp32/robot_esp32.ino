@@ -64,11 +64,11 @@ static float h0 = 0;                  // rumbo antes del obstáculo
 static int side = 1;                  // +1 = esquiva por la derecha, -1 izquierda
 static float distLeft = 0, distRight = 0;
 static uint32_t obstaclesAvoided = 0;
-static float lastLineErr = 0;
-static uint32_t prevLineSeen = 0;
-static uint32_t avoidEnd = 0;
-static bool alignArmed = false;       // ALINEAR: el sensor central ya salió de la línea
-static uint8_t tempLevel = 0;         // 0 normal, 1 aviso, 2 sobretemperatura         // instante en que terminó la última evasión    // última vez que se vio la línea (ciclo anterior)        // memoria del lado donde se vio la línea
+static float lastLineErr = 0;        // memoria del lado donde se vio la línea
+static uint32_t prevLineSeen = 0;    // última vez que se vio la línea (ciclo anterior)
+static uint32_t avoidEnd = 0;        // instante en que terminó la última evasión
+static bool alignArmed = false;      // ALINEAR: el sensor central ya salió de la línea
+static uint8_t tempLevel = 0;        // 0 normal, 1 aviso, 2 sobretemperatura
 
 // Eventos para la app / chatbot
 static char lastEvent[96] = "Sistema iniciado";

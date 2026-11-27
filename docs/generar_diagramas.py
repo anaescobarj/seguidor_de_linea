@@ -53,6 +53,7 @@ def arquitectura():
         r.node("us", "Ultrasonido HC-SR04", fillcolor=C["sens"])
         r.node("ir", "3× TCRT5000\n(línea guía)", fillcolor=C["sens"])
         r.node("vb", "Divisor de batería\n(ADC)", fillcolor=C["sens"])
+        r.node("ntc", "Termistor NTC\n(temp. baterías)", fillcolor=C["sens"])
         r.node("srv", "Servo SG90\n(orienta el sonar)", fillcolor=C["act"])
         r.node("drv", "Puente H TB6612FNG", fillcolor=C["act"])
         r.node("mot", "4× motorreductor TT\n(tracción diferencial)", fillcolor=C["act"])
@@ -60,6 +61,7 @@ def arquitectura():
         for s in ("mag", "col"):
             r.edge(s, "esp", label="I2C")
         r.edge("us", "esp", label="TRIG/ECHO"); r.edge("ir", "esp", label="GPIO"); r.edge("vb", "esp", label="ADC")
+        r.edge("ntc", "esp", label="ADC")
         r.edge("esp", "srv", label="PWM 50 Hz"); r.edge("esp", "drv", label="PWM 20 kHz"); r.edge("drv", "mot")
     d.node("rc", "Control remoto ESP32\n(joystick + botones)", fillcolor=C["com"])
     d.node("app", "App Streamlit\n(dashboard, voz)", fillcolor=C["com"])
@@ -103,6 +105,12 @@ MODULOS = {
         ("Línea guía\n19 mm", "sw"), ("3× TCRT5000\n(comparador LM393)", "sens"), ("Error lateral\n−1 … +1", "proc"),
         ("Control P\nw = 0.45·e", "proc"), ("Brújula mantiene\nrumbo en huecos", "proc"), ("Búsqueda en\nespiral", "proc")],
         []),
+    "bloque_termico": ("Módulo de protección térmica", [
+        ("Celdas 18650\n(calor)", "pot"), ("NTC 10k B3950\npegado al portapilas", "sens"),
+        ("Divisor 10k\n3,3 V → GPIO33 (ADC1)", "sens"), ("Promedio 4 + filtro\npaso-bajo", "proc"),
+        ("Ecuación Beta\n→ °C", "proc"), ("45 °C aviso /\n55 °C corte", "proc"),
+        ("Motores limitados,\nAUTO bloqueado", "act")],
+        [("45 °C aviso /\n55 °C corte", "Evento a la app\ny J.A.R.V.I.S.")]),
     "bloque_comunicaciones": ("Módulo de comunicaciones", [
         ("ESP32 Wi-Fi\nAP+STA canal 1", "com"), ("SoftAP ROBOT-ESP32\n192.168.4.1", "com"),
         ("WebServer :80\nAPI REST/JSON", "proc"), ("App Streamlit\n(polling 2–4 Hz)", "sw")],
@@ -196,6 +204,11 @@ def esquematico():
         n2 = dw.add(elm.Dot().label("→ GPIO19 (3.3 V)", loc="right"))
         dw.add(elm.Resistor().down().label("R4 2 kΩ", loc="bot"))
         dw.add(elm.Ground())
+        dw.add(elm.Tag().left().at((22, -6.5)).label("+3V3", fontsize=10))
+        dw.add(elm.Resistor().at((22, -6.5)).right().label("R5 10 kΩ", ofst=0.3))
+        dw.add(elm.Dot().label("→ GPIO33 (NTC)", loc="right"))
+        dw.add(elm.Thermistor().down().label("TH1 NTC\n10k B3950", loc="bot"))
+        dw.add(elm.Ground())
 
     # ----------------------------------------------------------- conexiones por nets (matplotlib)
     NET_COL = {"+5V": "#dc2626", "+7.4V": "#9f1239", "+3V3": "#ea580c", "GND": "#111827", "SDA": "#2563eb",
@@ -222,12 +235,12 @@ def esquematico():
                         bbox=dict(boxstyle="rarrow,pad=0.2", fc="white", ec=col, lw=0.8))
 
     fig, ax = plt.subplots(figsize=(16, 11))
-    left = [("GPIO25", "PWMA"), ("GPIO26", "AIN1"), ("GPIO27", "AIN2"), ("GPIO14", "PWMB"), ("GPIO33", "BIN1"),
+    left = [("GPIO25", "PWMA"), ("GPIO26", "AIN1"), ("GPIO27", "AIN2"), ("GPIO14", "PWMB"), ("GPIO16", "BIN1"),
             ("GPIO32", "BIN2"), ("GPIO13", "STBY"), ("GPIO36 (VP)", "VBAT"), ("GPIO34", "IR_L"),
-            ("GPIO35", "IR_C"), ("GPIO39 (VN)", "IR_R")]
+            ("GPIO35", "IR_C"), ("GPIO39 (VN)", "IR_R"), ("GPIO33", "NTC")]
     right = [("GPIO21", "SDA"), ("GPIO22", "SCL"), ("GPIO4", "LED_COLOR"), ("GPIO18", "TRIG"), ("GPIO19", "ECHO_3V3"),
              ("GPIO23", "SERVO"), ("GPIO2", "LED_ESTADO"), ("VIN", "+5V"), ("3V3", "+3V3"), ("GND", "GND")]
-    block(ax, 7, 10, "", right + [("", "")], "right", w=3.2, color="#dbeafe")
+    block(ax, 7, 10, "", right + [("", ""), ("", "")], "right", w=3.2, color="#dbeafe")
     block(ax, 7, 10, "U1 · ESP32 DevKit V1", left, "left", w=3.2, color="#dbeafe")
     block(ax, 1.5, 10, "U3 · TB6612FNG", [("PWMA", "PWMA"), ("AIN1", "AIN1"), ("AIN2", "AIN2"), ("PWMB", "PWMB"),
           ("BIN1", "BIN1"), ("BIN2", "BIN2"), ("STBY", "STBY"), ("VCC", "+3V3"), ("VM", "+7.4V"), ("GND", "GND")],
@@ -239,13 +252,16 @@ def esquematico():
           ("LED", "LED_COLOR")], "left", color="#dcfce7")
     block(ax, 15.5, 3.0, "U6 · HC-SR04", [("VCC", "+5V"), ("TRIG", "TRIG"), ("ECHO", "ECHO (R3/R4)"), ("GND", "GND")],
           "left", color="#dcfce7")
-    block(ax, 8.5, 2.5, "U7 · 3× TCRT5000", [("VCC", "+3V3"), ("GND", "GND"), ("D0 izq.", "IR_L"), ("D0 centro", "IR_C"),
+    block(ax, 8.5, 1.5, "U7 · 3× TCRT5000", [("VCC", "+3V3"), ("GND", "GND"), ("D0 izq.", "IR_L"), ("D0 centro", "IR_C"),
           ("D0 der.", "IR_R")], "left", color="#dcfce7")
     block(ax, 1.5, 2.5, "M5 · Servo SG90", [("SIG", "SERVO"), ("+", "+5V"), ("−", "GND")], "left", color="#fef3c7")
+    block(ax, 15.5, -0.2, "TH1 · NTC 10k B3950 (en baterías)", [("nodo", "NTC"), ("−", "GND")], "left",
+          color="#dcfce7")
+    ax.text(15.5, -2.0, "R5 10 kΩ de +3V3 al nodo NTC", fontsize=8)
     ax.text(15.5, 10.9, "I2C 400 kHz · pull-ups 4.7 kΩ en los módulos", fontsize=8, color="#2563eb")
-    ax.text(0, -1.4, "Nets con el mismo nombre están conectadas. ECHO del HC-SR04 (5 V) pasa por el divisor R3/R4 "
+    ax.text(0, -2.8, "Nets con el mismo nombre están conectadas. ECHO del HC-SR04 (5 V) pasa por el divisor R3/R4 "
             "antes de GPIO19. GPIO34-39 son solo entrada. Se evitan GPIO0/12/15 (pines de arranque).", fontsize=9)
-    ax.set_xlim(-1.5, 20); ax.set_ylim(-1.8, 11.5); ax.axis("off")
+    ax.set_xlim(-1.5, 20); ax.set_ylim(-3.2, 11.5); ax.axis("off")
     ax.set_title("Esquema de conexiones del sistema electrónico (nets)", fontsize=14, weight="bold")
     fig.savefig(os.path.join(OUT, "esquematico_esp32.png"), dpi=170, bbox_inches="tight"); plt.close(fig)
 
